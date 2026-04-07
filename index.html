@@ -3,278 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced MD Compensation & ROI Modeler</title>
+    <title>Physician Fairness & Value Modeler</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .input-group { border-left: 4px solid #e2e8f0; padding-left: 1rem; margin-bottom: 1.5rem; }
-        .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; rounded: 0.5rem; }
+        .card { @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6; }
+        .input-label { @apply block text-[10px] font-bold text-slate-500 uppercase mb-1; }
+        .data-input { @apply w-full p-2 bg-slate-50 border border-slate-200 rounded font-medium focus:ring-2 focus:ring-indigo-500 outline-none; }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
-<body class="bg-gray-100 text-slate-900 font-sans leading-tight">
+<body class="bg-slate-50 text-slate-900 pb-20">
 
-    <!-- TOP NAV -->
-    <nav class="bg-white border-b border-slate-200 py-4 px-6 no-print">
+    <!-- Header -->
+    <nav class="bg-indigo-900 text-white p-4 no-print">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-xl">Σ</div>
-                <h1 class="text-xl font-bold tracking-tight">Physician Value <span class="text-indigo-600">Modeler</span></h1>
-            </div>
-            <div class="flex gap-4">
-                <select id="viewMode" class="bg-slate-100 border-none rounded-md text-sm font-semibold p-2 focus:ring-2 focus:ring-indigo-500" onchange="runModel()">
-                    <option value="physician">View: Physician Perspective</option>
-                    <option value="employer">View: Employer/System Perspective</option>
+            <h1 class="text-xl font-black italic tracking-tighter">MD-VALUE<span class="text-indigo-400">CHECK</span></h1>
+            <div class="flex gap-4 items-center">
+                <span class="text-xs font-bold text-indigo-300">Geographic Market:</span>
+                <select id="geoMarket" class="bg-indigo-800 border-none rounded text-xs p-1" onchange="runModel()">
+                    <option value="1.0">National Average (Base)</option>
+                    <option value="1.18">New York City (+18%)</option>
+                    <option value="1.24">San Francisco (+24%)</option>
+                    <option value="1.06">Chicago (+6%)</option>
+                    <option value="0.98">Dallas (-2%)</option>
+                    <option value="1.03">Miami (+3%)</option>
                 </select>
-                <button onclick="window.print()" class="bg-slate-900 text-white px-4 py-2 rounded text-sm font-bold">Export Report</button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- LEFT: INPUT PANELS -->
+        <!-- INPUT COLUMN -->
         <div class="lg:col-span-8 space-y-6">
             
-            <!-- 1. Specialty & Benchmarking -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-indigo-500">📊</span> Benchmarking & Specialty</h3>
+            <!-- 1. The Benchmark (User Entered) -->
+            <div class="card border-l-4 border-l-indigo-500">
+                <h3 class="font-bold text-lg mb-4 text-slate-700">1. Specialty Benchmarking (Annual)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Specialty Preset (Illustrative)</label>
-                        <select id="specialty" class="w-full mt-1 p-2 bg-slate-50 border rounded-md" onchange="applyPreset()">
-                            <option value="fm">Family Medicine</option>
-                            <option value="im">Internal Medicine</option>
-                            <option value="cards">Cardiology (Invasive)</option>
-                            <option value="ortho">Orthopedic Surgery</option>
-                            <option value="hospitalist">Hospitalist</option>
-                            <option value="custom">Custom (Manual Entry)</option>
-                        </select>
+                        <label class="input-label">Reported Median Median (MGMA/SullCotter)</label>
+                        <input type="number" id="medianBenchmark" value="300000" class="data-input text-indigo-600 text-lg" oninput="runModel()">
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Enter the national median for your specialty/sub-specialty.</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase italic">Benchmarking Source (SullivanCotter/MGMA)</label>
-                        <input type="text" placeholder="e.g. 2024 MGMA National Median" class="w-full mt-1 p-2 bg-slate-50 border rounded-md text-sm">
+                    <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                        <label class="input-label">Geo-Adjusted Median</label>
+                        <p class="text-2xl font-black text-slate-700" id="adjMedian">$0</p>
+                        <p class="text-[10px] text-slate-400 uppercase">Target comp for selected market</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Clinical Production -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-indigo-500">📈</span> Productivity & Revenue</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="input-group border-indigo-400">
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Annual wRVUs</label>
-                        <input type="number" id="wrvus" value="5200" class="w-full text-lg font-bold outline-none" oninput="runModel()">
+            <!-- 2. The Offer Components -->
+            <div class="card">
+                <h3 class="font-bold text-lg mb-4 text-slate-700">2. Cash Offer (What You Get Paid)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="input-label">Base Salary</label>
+                        <input type="number" id="baseSalary" value="250000" class="data-input" oninput="runModel()">
                     </div>
-                    <div class="input-group border-indigo-200">
-                        <label class="block text-xs font-bold text-slate-500 uppercase">FTE Status</label>
-                        <input type="number" id="fte" value="1.0" step="0.1" class="w-full text-lg font-bold outline-none" oninput="runModel()">
+                    <div>
+                        <label class="input-label">Sign-on Bonus (Year 1)</label>
+                        <input type="number" id="signOn" value="30000" class="data-input" oninput="runModel()">
                     </div>
-                    <div class="input-group border-emerald-400">
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Avg Collections per wRVU</label>
-                        <input type="number" id="collectionsPerWrvu" value="85" class="w-full text-lg font-bold outline-none" oninput="runModel()">
-                        <p class="text-[10px] text-slate-400 italic">Common range: $60 - $110</p>
+                    <div>
+                        <label class="input-label">Est. Annual wRVU Bonus</label>
+                        <input type="number" id="wrvuBonus" value="25000" class="data-input" oninput="runModel()">
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="input-label">Avg. Weekly Hours (Total)</label>
+                        <input type="number" id="hours" value="45" class="data-input" oninput="runModel()">
+                    </div>
+                    <div>
+                        <label class="input-label">Other Cash (Stipends/Call)</label>
+                        <input type="number" id="otherCash" value="0" class="data-input" oninput="runModel()">
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Compensation Structure -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-indigo-500">💰</span> Compensation Split</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase">Guaranteed Base Salary</label>
-                            <input type="number" id="baseSalary" value="240000" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase">wRVU Threshold</label>
-                                <input type="number" id="threshold" value="4200" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase">$/wRVU Conv.</label>
-                                <input type="number" id="conversion" value="45" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
-                            </div>
-                        </div>
+            <!-- 3. Employer Costs (Hidden Value) -->
+            <div class="card bg-slate-900 text-white border-none">
+                <h3 class="font-bold text-lg mb-4 text-indigo-300">3. Total Cost of Employment (What They Pay For You)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="input-label text-slate-400">Health/Retire/Benefits</label>
+                        <input type="number" id="benefits" value="55000" class="w-full p-2 bg-slate-800 rounded border-none text-white" oninput="runModel()">
                     </div>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase">Sign-On / Retension (Yr 1)</label>
-                            <input type="number" id="signOn" value="30000" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase">Annual Benefits & CME (Cost to Emp)</label>
-                            <input type="number" id="benefits" value="65000" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
-                        </div>
+                    <div>
+                        <label class="input-label text-slate-400">Malpractice + Tail</label>
+                        <input type="number" id="malpractice" value="18000" class="w-full p-2 bg-slate-800 rounded border-none text-white" oninput="runModel()">
+                    </div>
+                    <div>
+                        <label class="input-label text-slate-400">Employer Taxes (FICA/etc)</label>
+                        <input type="number" id="tax" value="15000" class="w-full p-2 bg-slate-800 rounded border-none text-white" oninput="runModel()">
                     </div>
                 </div>
-            </div>
-
-            <!-- 4. Employer Overhead (Advanced) -->
-            <div id="employerSection" class="bg-slate-800 p-6 rounded-xl shadow-sm text-white">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-300">🏢 Corporate Allocated Overhead</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase">Fixed Overhead % (Staff/Rent)</label>
-                        <input type="number" id="overheadPct" value="35" class="w-full bg-slate-700 border-none rounded p-2 text-white" oninput="runModel()">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase">Malpractice Cost (Annual)</label>
-                        <input type="number" id="malpractice" value="15000" class="w-full bg-slate-700 border-none rounded p-2 text-white" oninput="runModel()">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase">Indirect/Apportioned Costs</label>
-                        <input type="number" id="indirect" value="10000" class="w-full bg-slate-700 border-none rounded p-2 text-white" oninput="runModel()">
-                    </div>
-                </div>
+                <p class="text-[10px] text-slate-500 mt-4 italic">This section helps you see the "Gap" between your take-home pay and the hospital's total investment.</p>
             </div>
         </div>
 
-        <!-- RIGHT: ANALYSIS PANEL -->
-        <div class="lg:col-span-4">
-            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden sticky top-6">
-                <div class="bg-indigo-600 p-6 text-white text-center">
-                    <h2 class="text-sm font-bold uppercase tracking-widest opacity-80" id="resultLabel">Physician Year 1 TCC</h2>
-                    <p class="text-5xl font-black mt-2" id="outMainMetric">$0</p>
+        <!-- ANALYSIS COLUMN -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- VERDICT BOX -->
+            <div id="verdictCard" class="rounded-xl p-8 text-center border-b-8 shadow-xl transition-all duration-500">
+                <h2 class="text-xs font-bold uppercase tracking-widest mb-1 opacity-80" id="verdictLabel">Fairness Score</h2>
+                <p class="text-4xl font-black mb-2" id="verdictText">Analyzing...</p>
+                <p class="text-sm font-medium opacity-90" id="verdictSubtext"></p>
+            </div>
+
+            <!-- SUMMARY STATS -->
+            <div class="card space-y-6">
+                <div>
+                    <p class="input-label">Your Total Cash (Yr 1)</p>
+                    <p class="text-4xl font-black text-slate-800" id="outTCC">$0</p>
                 </div>
-                
-                <div class="p-6 space-y-6">
-                    <!-- Value Surplus Metric -->
-                    <div class="metric-card">
-                        <p class="text-xs font-bold text-slate-400 uppercase">Estimated Surplus Value</p>
-                        <div class="flex justify-between items-end mt-1">
-                            <p class="text-2xl font-bold text-slate-800" id="outSurplus">$0</p>
-                            <p class="text-xs font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-700" id="outROI">0% ROI</p>
-                        </div>
-                        <div class="w-full bg-slate-200 h-2 mt-3 rounded-full overflow-hidden">
-                            <div id="roiBar" class="bg-emerald-500 h-full w-[50%]"></div>
-                        </div>
-                    </div>
 
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Total Net Collections:</span>
-                            <span class="font-bold" id="outCollections">$0</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Total Cost of Employment:</span>
-                            <span class="font-bold text-rose-500" id="outTCE">$0</span>
-                        </div>
-                        <hr>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500 font-bold">Comp-to-Collections Ratio:</span>
-                            <span class="font-black text-indigo-600" id="outRatio">0%</span>
-                        </div>
+                <div class="pt-4 border-t border-slate-100">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-xs text-slate-500">Total Employer Outlay:</span>
+                        <span class="text-xs font-bold" id="outTCE">$0</span>
                     </div>
-
-                    <div class="bg-slate-50 p-4 rounded-lg border border-dashed border-slate-300">
-                        <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-2 italic">Benchmarking Comparison (TCC)</h4>
-                        <div id="benchList" class="space-y-1 text-xs">
-                            <!-- Populated by JS -->
-                        </div>
+                    <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden flex">
+                        <div id="barTCC" class="bg-indigo-500 h-full" style="width: 70%"></div>
+                        <div id="barHidden" class="bg-slate-300 h-full" style="width: 30%"></div>
+                    </div>
+                    <div class="flex justify-between mt-1">
+                        <span class="text-[10px] text-indigo-600 font-bold">● Cash Paid to You</span>
+                        <span class="text-[10px] text-slate-400 font-bold">● System Overhead</span>
                     </div>
                 </div>
+
+                <div class="pt-4 border-t border-slate-100 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-slate-600">Effective Hourly:</span>
+                        <span class="text-sm font-bold" id="outHourly">$0/hr</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-slate-600">Market Variance:</span>
+                        <span class="text-sm font-bold" id="outVariance">0%</span>
+                    </div>
+                </div>
+
+                <button onclick="window.print()" class="w-full py-3 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition no-print">Generate PDF Report</button>
             </div>
         </div>
     </main>
 
     <script>
-        const presets = {
-            fm: { base: 240000, wrvus: 5200, thresh: 4200, conv: 45, coll: 85, bench: 265000 },
-            im: { base: 260000, wrvus: 5500, thresh: 4500, conv: 48, coll: 90, bench: 280000 },
-            cards: { base: 450000, wrvus: 8500, thresh: 6000, conv: 65, coll: 110, bench: 550000 },
-            ortho: { base: 550000, wrvus: 9000, thresh: 7000, conv: 75, coll: 125, bench: 680000 },
-            hospitalist: { base: 280000, wrvus: 4000, thresh: 3500, conv: 40, coll: 80, bench: 310000 }
-        };
-
-        function applyPreset() {
-            const key = document.getElementById('specialty').value;
-            if (key === 'custom') return;
-            const p = presets[key];
-            document.getElementById('baseSalary').value = p.base;
-            document.getElementById('wrvus').value = p.wrvus;
-            document.getElementById('threshold').value = p.thresh;
-            document.getElementById('conversion').value = p.conv;
-            document.getElementById('collectionsPerWrvu').value = p.coll;
-            runModel();
-        }
-
         function runModel() {
-            const view = document.getElementById('viewMode').value;
-            const data = {
-                wrvus: parseFloat(document.getElementById('wrvus').value) || 0,
-                base: parseFloat(document.getElementById('baseSalary').value) || 0,
-                signOn: parseFloat(document.getElementById('signOn').value) || 0,
-                thresh: parseFloat(document.getElementById('threshold').value) || 0,
-                conv: parseFloat(document.getElementById('conversion').value) || 0,
-                collFactor: parseFloat(document.getElementById('collectionsPerWrvu').value) || 0,
-                overheadPct: parseFloat(document.getElementById('overheadPct').value) || 0,
-                benefits: parseFloat(document.getElementById('benefits').value) || 0,
-                mal: parseFloat(document.getElementById('malpractice').value) || 0,
-                ind: parseFloat(document.getElementById('indirect').value) || 0
-            };
-
-            // 1. COMP CALC
-            const production = Math.max(0, (data.wrvus - data.thresh) * data.conv);
-            const tcc_yr1 = data.base + production + data.signOn;
-            const tcc_recurring = data.base + production;
-
-            // 2. REVENUE & SURPLUS
-            const grossCollections = data.wrvus * data.collFactor;
-            const tce = tcc_recurring + data.benefits + data.mal + data.ind;
-            const totalOverheadDollars = grossCollections * (data.overheadPct / 100);
-            const totalSystemCost = tce + totalOverheadDollars;
-            const surplus = grossCollections - totalSystemCost;
-            const roi = (surplus / totalSystemCost) * 100;
-
-            // 3. UI UPDATES
-            if (view === 'physician') {
-                document.getElementById('resultLabel').innerText = "Physician Year 1 TCC";
-                document.getElementById('outMainMetric').innerText = fmt(tcc_yr1);
-                document.getElementById('employerSection').classList.add('opacity-40');
-            } else {
-                document.getElementById('resultLabel').innerText = "Net Employer Surplus (Recur.)";
-                document.getElementById('outMainMetric').innerText = fmt(surplus);
-                document.getElementById('employerSection').classList.remove('opacity-40');
-            }
-
-            document.getElementById('outCollections').innerText = fmt(grossCollections);
-            document.getElementById('outTCE').innerText = fmt(totalSystemCost);
-            document.getElementById('outSurplus').innerText = fmt(surplus);
-            document.getElementById('outRatio').innerText = ((tcc_recurring / grossCollections) * 100).toFixed(1) + "%";
-            document.getElementById('outROI').innerText = roi.toFixed(1) + "% ROI";
+            // Inputs
+            const medianBench = parseFloat(document.getElementById('medianBenchmark').value) || 0;
+            const geoCoeff = parseFloat(document.getElementById('geoMarket').value) || 1.0;
             
-            // ROI Bar styling
-            const roiClamped = Math.min(Math.max(roi, 0), 100);
-            document.getElementById('roiBar').style.width = roiClamped + "%";
-            document.getElementById('roiBar').className = roi < 0 ? 'bg-rose-500 h-full transition-all' : 'bg-emerald-500 h-full transition-all';
+            const base = parseFloat(document.getElementById('baseSalary').value) || 0;
+            const signOn = parseFloat(document.getElementById('signOn').value) || 0;
+            const bonus = parseFloat(document.getElementById('wrvuBonus').value) || 0;
+            const other = parseFloat(document.getElementById('otherCash').value) || 0;
+            
+            const benefits = parseFloat(document.getElementById('benefits').value) || 0;
+            const malpractice = parseFloat(document.getElementById('malpractice').value) || 0;
+            const taxes = parseFloat(document.getElementById('tax').value) || 0;
+            const hours = parseFloat(document.getElementById('hours').value) || 40;
 
-            updateBenchmarking(tcc_recurring);
-        }
+            // Calculations
+            const adjMedian = medianBench * geoCoeff;
+            const tcc_yr1 = base + signOn + bonus + other;
+            const tcc_recurring = base + bonus + other;
+            const tce = tcc_recurring + benefits + malpractice + taxes;
+            
+            const hourly = tcc_yr1 / (hours * 48); // Assuming 48 weeks
+            const variance = ((tcc_recurring / adjMedian) - 1) * 100;
 
-        function updateBenchmarking(currentTCC) {
-            const benchMedian = presets[document.getElementById('specialty').value]?.bench || currentTCC * 1.1;
-            const benchmarks = [
-                { label: "25th Percentile", val: benchMedian * 0.85 },
-                { label: "50th (Median)", val: benchMedian },
-                { label: "75th Percentile", val: benchMedian * 1.2 },
-                { label: "90th Percentile", val: benchMedian * 1.4 }
-            ];
+            // Update UI
+            document.getElementById('adjMedian').innerText = fmt(adjMedian);
+            document.getElementById('outTCC').innerText = fmt(tcc_yr1);
+            document.getElementById('outTCE').innerText = fmt(tce);
+            document.getElementById('outHourly').innerText = fmt(hourly);
+            document.getElementById('outVariance').innerText = (variance > 0 ? '+' : '') + variance.toFixed(1) + '%';
 
-            let html = '';
-            benchmarks.forEach(b => {
-                const diff = currentTCC - b.val;
-                const color = diff >= 0 ? 'text-emerald-600' : 'text-rose-600';
-                html += `
-                    <div class="flex justify-between">
-                        <span>${b.label}:</span>
-                        <div class="text-right font-mono">
-                            <div>${fmt(b.val)}</div>
-                            <div class="${color} font-bold" style="font-size: 9px;">${diff >= 0 ? '+' : ''}${fmt(diff)}</div>
-                        </div>
-                    </div>`;
-            });
-            document.getElementById('benchList').innerHTML = html;
+            // Percentage Bars
+            const tccPercent = (tcc_recurring / tce) * 100;
+            document.getElementById('barTCC').style.width = tccPercent + '%';
+            document.getElementById('barHidden').style.width = (100 - tccPercent) + '%';
+
+            // Verdict Logic
+            const vCard = document.getElementById('verdictCard');
+            const vText = document.getElementById('verdictText');
+            const vSub = document.getElementById('verdictSubtext');
+            const vLabel = document.getElementById('verdictLabel');
+
+            if (variance < -15) {
+                vCard.className = "card bg-rose-50 border-rose-500 text-rose-900 rounded-xl p-8 text-center border-b-8 shadow-xl";
+                vText.innerText = "Under Market";
+                vSub.innerText = "This offer is significantly below the geographically adjusted median. Negotiation or secondary offer review highly recommended.";
+            } else if (variance >= -15 && variance <= 5) {
+                vCard.className = "card bg-emerald-50 border-emerald-500 text-emerald-900 rounded-xl p-8 text-center border-b-8 shadow-xl";
+                vText.innerText = "Fair Market";
+                vSub.innerText = "This offer aligns with regional cost-of-labor benchmarks. It is considered a 'Fair' competitive offer.";
+            } else {
+                vCard.className = "card bg-indigo-50 border-indigo-500 text-indigo-900 rounded-xl p-8 text-center border-b-8 shadow-xl";
+                vText.innerText = "Above Market";
+                vSub.innerText = "This offer exceeds regional benchmarks. Ensure you understand the productivity requirements (wRVUs) necessary to maintain this level.";
+            }
         }
 
         function fmt(n) {
@@ -282,7 +215,7 @@
         }
 
         // Initial Run
-        applyPreset();
+        runModel();
     </script>
 </body>
 </html>
