@@ -3,140 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total Cash Compensation (TCC) Generator</title>
+    <title>Physician Compensation Modeler</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print { .no-print { display: none; } }
+        .card { border: 1px solid #e2e8f0; border-radius: 0.75rem; background: white; padding: 1.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-gray-900">Offer Comparison Generator</h1>
-            <p class="text-gray-600 font-medium">Calculate your Total Cash Compensation (TCC) over 4 years.</p>
-        </header>
+<body class="bg-gray-50 text-slate-800 min-h-screen pb-20">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Inputs -->
-            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                <h2 class="text-xl font-semibold mb-4 text-indigo-600 border-b pb-2">Offer Details</h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Company Name</label>
-                        <input type="text" id="company" placeholder="e.g. Acme Corp" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Annual Base Salary ($)</label>
-                        <input type="number" id="baseSalary" value="120000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Target Bonus (%)</label>
-                            <input type="number" id="bonusPct" value="10" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Sign-on Bonus ($)</label>
-                            <input type="number" id="signOn" value="10000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Total Equity (RSUs/Options over 4 yrs)</label>
-                        <input type="number" id="equity" value="100000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Annual 401k Match/Benefits Value ($)</label>
-                        <input type="number" id="benefits" value="5000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
-                    </div>
-                </div>
+    <!-- Top Branding Header -->
+    <nav class="bg-white border-b border-slate-200 py-4 mb-8 px-6">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <!-- YOUR BRAND (Edit the src below to your logo) -->
+            <div class="flex items-center gap-3">
+                <img id="creatorLogo" src="https://via.placeholder.com/150x50?text=YOUR+LOGO" alt="Creator Logo" class="h-10 object-contain">
+                <div class="h-8 w-[1px] bg-slate-300 mx-2"></div>
+                <h1 class="font-bold text-slate-700 tracking-tight">MD Offer Engine</h1>
             </div>
+            <button onclick="window.print()" class="no-print bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-slate-800 transition">
+                Export to PDF
+            </button>
+        </div>
+    </nav>
 
-            <!-- Results -->
-            <div class="bg-indigo-900 text-white p-6 rounded-xl shadow-md">
-                <h2 class="text-xl font-semibold mb-4 border-b border-indigo-700 pb-2 text-indigo-200">Compensation Breakdown</h2>
-                
-                <div class="space-y-6">
-                    <div>
-                        <p class="text-indigo-300 text-sm uppercase tracking-wider">Year 1 Total Cash (TCC)</p>
-                        <p class="text-4xl font-bold" id="y1TCC">$0</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-indigo-800 p-3 rounded-lg">
-                            <p class="text-xs text-indigo-300 uppercase">Monthly (Gross)</p>
-                            <p class="text-lg font-semibold" id="monthly">$0</p>
-                        </div>
-                        <div class="bg-indigo-800 p-3 rounded-lg">
-                            <p class="text-xs text-indigo-300 uppercase">4-Year Average</p>
-                            <p class="text-lg font-semibold" id="avgTCC">$0</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 space-y-2">
-                        <p class="text-sm font-semibold border-b border-indigo-700 pb-1">4-Year Projection</p>
-                        <div id="projectionList" class="text-sm space-y-1">
-                            <!-- JS will populate this -->
-                        </div>
-                    </div>
-
-                    <button onclick="window.print()" class="w-full mt-4 bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2 px-4 rounded transition">
-                        Export as PDF / Print
-                    </button>
+    <main class="max-w-6xl mx-auto px-4">
+        
+        <!-- Header: User's Dynamic Branding -->
+        <div class="card mb-8 flex flex-col md:flex-row gap-8 items-center bg-gradient-to-r from-slate-50 to-white">
+            <div class="flex-shrink-0 text-center">
+                <div id="userImagePreview" class="w-32 h-32 rounded-full bg-white border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden mb-2">
+                    <span class="text-[10px] text-slate-400 p-2 uppercase font-bold text-center">Upload Hospital Logo</span>
+                </div>
+                <input type="file" id="userPhotoInput" class="no-print text-xs text-slate-500 w-32" accept="image/*">
+            </div>
+            
+            <div class="flex-grow space-y-3 w-full">
+                <input type="text" id="hospitalName" placeholder="Health System / Practice Name" class="text-3xl font-extrabold w-full border-none focus:ring-0 bg-transparent placeholder-slate-300">
+                <div class="flex flex-wrap gap-4">
+                    <input type="text" id="physicianName" placeholder="Physician Name, MD/DO" class="text-lg text-slate-600 border-none focus:ring-0 bg-transparent placeholder-slate-400 w-64">
+                    <input type="text" id="specialty" placeholder="Specialty (e.g. Cardiology)" class="text-lg text-indigo-600 font-medium border-none focus:ring-0 bg-transparent placeholder-indigo-200 w-64">
                 </div>
             </div>
         </div>
-        
-        <footer class="mt-8 text-center text-gray-500 text-sm">
-            Generated with the Open Source Offer Comparison Tool
-        </footer>
-    </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- INPUTS -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Time & Effort Split -->
+                <div class="card">
+                    <h3 class="font-bold text-slate-500 uppercase text-xs tracking-widest mb-4">Time & Clinical Load</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">FTE (1.0 = Full Time)</label>
+                            <input type="number" id="fte" value="1.0" step="0.1" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Clinical Hours / Week</label>
+                            <input type="number" id="hoursPerWeek" value="40" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Weeks Worked / Year</label>
+                            <input type="number" id="weeksPerYear" value="46" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash Split (Base vs Bonus) -->
+                <div class="card">
+                    <h3 class="font-bold text-slate-500 uppercase text-xs tracking-widest mb-4">Cash Compensation</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Annual Base Salary ($)</label>
+                            <input type="number" id="baseSalary" value="280000" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">One-Time Sign-on ($)</label>
+                            <input type="number" id="signOn" value="50000" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Production (wRVU) Split -->
+                <div class="card bg-indigo-50 border-indigo-100">
+                    <h3 class="font-bold text-indigo-900 uppercase text-xs tracking-widest mb-4">wRVU Production Model</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-indigo-900">Projected wRVUs</label>
+                            <input type="number" id="wrvus" value="7000" class="mt-1 block w-full border-indigo-200 rounded-md bg-white p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-indigo-900">wRVU Threshold</label>
+                            <input type="number" id="threshold" value="5000" class="mt-1 block w-full border-indigo-200 rounded-md bg-white p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-indigo-900">$/wRVU Rate</label>
+                            <input type="number" id="conversion" value="55" class="mt-1 block w-full border-indigo-200 rounded-md bg-white p-2 border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physicians Specifics -->
+                <div class="card">
+                    <h3 class="font-bold text-slate-500 uppercase text-xs tracking-widest mb-4">Benefits & Perks (Annual)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">CME/Dues Allowance ($)</label>
+                            <input type="number" id="cme" value="5000" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Employer 401k/403b Match ($)</label>
+                            <input type="number" id="retirement" value="15000" class="mt-1 block w-full border-slate-300 rounded-md bg-slate-50 p-2 border">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS SIDEBAR -->
+            <div class="lg:col-span-1">
+                <div class="card bg-slate-900 text-white sticky top-4 border-none">
+                    <h2 class="text-indigo-400 font-bold uppercase text-xs tracking-widest mb-2">Total Year 1 Value</h2>
+                    <p class="text-5xl font-black mb-6" id="outTCC">$0</p>
+                    
+                    <div class="space-y-4 pt-6 border-t border-slate-700">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400 text-sm">Effective Hourly</span>
+                            <span class="text-xl font-bold text-emerald-400" id="outHourly">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400 text-sm">wRVU Production Pay</span>
+                            <span class="font-semibold" id="outProduction">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400 text-sm">Guaranteed Cash</span>
+                            <span class="font-semibold" id="outGuaranteed">$0</span>
+                        </div>
+                        
+                        <!-- 4 Year View -->
+                        <div class="mt-8 bg-slate-800 p-4 rounded-lg space-y-2">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">4-Year Forecast (Cumulative)</p>
+                            <div id="projectionList" class="text-sm space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
-        const inputs = ['baseSalary', 'bonusPct', 'signOn', 'equity', 'benefits'];
-        
+        const inputs = ['fte', 'hoursPerWeek', 'weeksPerYear', 'baseSalary', 'signOn', 'wrvus', 'threshold', 'conversion', 'cme', 'retirement'];
+
         function calculate() {
-            const base = parseFloat(document.getElementById('baseSalary').value) || 0;
-            const bonusPct = (parseFloat(document.getElementById('bonusPct').value) || 0) / 100;
-            const signOn = parseFloat(document.getElementById('signOn').value) || 0;
-            const equity = parseFloat(document.getElementById('equity').value) || 0;
-            const benefits = parseFloat(document.getElementById('benefits').value) || 0;
+            const vals = {};
+            inputs.forEach(id => vals[id] = parseFloat(document.getElementById(id).value) || 0);
 
-            const annualBonus = base * bonusPct;
-            const annualEquity = equity / 4; // Standard 4-year vest
+            // Production logic
+            const productionPay = Math.max(0, (vals.wrvus - vals.threshold) * vals.conversion);
+            
+            // Year 1 vs Year 2+
+            const annualRecurring = vals.baseSalary + productionPay + vals.cme + vals.retirement;
+            const year1TCC = annualRecurring + vals.signOn;
 
-            // Year 1 includes Sign-on
-            const year1 = base + annualBonus + signOn + annualEquity + benefits;
-            // Years 2-4 exclude Sign-on
-            const standardYear = base + annualBonus + annualEquity + benefits;
-            const fourYearTotal = year1 + (standardYear * 3);
-            const avg = fourYearTotal / 4;
+            // Hourly logic
+            const annualHours = vals.hoursPerWeek * vals.weeksPerYear;
+            const effectiveHourly = year1TCC / (annualHours || 1);
 
-            // Update UI
-            document.getElementById('y1TCC').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(year1);
-            document.getElementById('monthly').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(year1 / 12);
-            document.getElementById('avgTCC').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(avg);
+            // Display
+            document.getElementById('outTCC').innerText = format(year1TCC);
+            document.getElementById('outHourly').innerText = format(effectiveHourly) + '/hr';
+            document.getElementById('outProduction').innerText = format(productionPay);
+            document.getElementById('outGuaranteed').innerText = format(vals.baseSalary);
 
-            let projectionHTML = `
-                <div class="flex justify-between"><span>Year 1:</span> <span>${formatCurr(year1)}</span></div>
-                <div class="flex justify-between"><span>Year 2:</span> <span>${formatCurr(standardYear)}</span></div>
-                <div class="flex justify-between"><span>Year 3:</span> <span>${formatCurr(standardYear)}</span></div>
-                <div class="flex justify-between"><span>Year 4:</span> <span>${formatCurr(standardYear)}</span></div>
-                <div class="flex justify-between font-bold border-t border-indigo-700 pt-1 mt-1"><span>Total 4-Year Value:</span> <span>${formatCurr(fourYearTotal)}</span></div>
-            `;
-            document.getElementById('projectionList').innerHTML = projectionHTML;
+            // Projections
+            let listHtml = '';
+            for(let i=1; i<=4; i++) {
+                let cumulative = year1TCC + (annualRecurring * (i-1));
+                listHtml += `
+                    <div class="flex justify-between">
+                        <span class="text-slate-400 text-xs text-left">Yr ${i} Cumulative:</span>
+                        <span class="font-mono text-indigo-300 font-bold">${format(cumulative)}</span>
+                    </div>`;
+            }
+            document.getElementById('projectionList').innerHTML = listHtml;
         }
 
-        function formatCurr(num) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+        function format(n) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
         }
 
-        // Add event listeners to all inputs
-        inputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', calculate);
+        // Image Handling
+        document.getElementById('userPhotoInput').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('userImagePreview').innerHTML = `<img src="${reader.result}" class="w-full h-full object-cover">`;
+            }
+            reader.readAsDataURL(e.target.files[0]);
         });
 
-        // Run once on load
+        inputs.forEach(id => document.getElementById(id).addEventListener('input', calculate));
         calculate();
     </script>
 </body>
