@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Cash Compensation (TCC) Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-900">Offer Comparison Generator</h1>
+            <p class="text-gray-600 font-medium">Calculate your Total Cash Compensation (TCC) over 4 years.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Inputs -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h2 class="text-xl font-semibold mb-4 text-indigo-600 border-b pb-2">Offer Details</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Company Name</label>
+                        <input type="text" id="company" placeholder="e.g. Acme Corp" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Annual Base Salary ($)</label>
+                        <input type="number" id="baseSalary" value="120000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Target Bonus (%)</label>
+                            <input type="number" id="bonusPct" value="10" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Sign-on Bonus ($)</label>
+                            <input type="number" id="signOn" value="10000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Total Equity (RSUs/Options over 4 yrs)</label>
+                        <input type="number" id="equity" value="100000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Annual 401k Match/Benefits Value ($)</label>
+                        <input type="number" id="benefits" value="5000" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-indigo-900 text-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-semibold mb-4 border-b border-indigo-700 pb-2 text-indigo-200">Compensation Breakdown</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-indigo-300 text-sm uppercase tracking-wider">Year 1 Total Cash (TCC)</p>
+                        <p class="text-4xl font-bold" id="y1TCC">$0</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-indigo-800 p-3 rounded-lg">
+                            <p class="text-xs text-indigo-300 uppercase">Monthly (Gross)</p>
+                            <p class="text-lg font-semibold" id="monthly">$0</p>
+                        </div>
+                        <div class="bg-indigo-800 p-3 rounded-lg">
+                            <p class="text-xs text-indigo-300 uppercase">4-Year Average</p>
+                            <p class="text-lg font-semibold" id="avgTCC">$0</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 space-y-2">
+                        <p class="text-sm font-semibold border-b border-indigo-700 pb-1">4-Year Projection</p>
+                        <div id="projectionList" class="text-sm space-y-1">
+                            <!-- JS will populate this -->
+                        </div>
+                    </div>
+
+                    <button onclick="window.print()" class="w-full mt-4 bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2 px-4 rounded transition">
+                        Export as PDF / Print
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="mt-8 text-center text-gray-500 text-sm">
+            Generated with the Open Source Offer Comparison Tool
+        </footer>
+    </div>
+
+    <script>
+        const inputs = ['baseSalary', 'bonusPct', 'signOn', 'equity', 'benefits'];
+        
+        function calculate() {
+            const base = parseFloat(document.getElementById('baseSalary').value) || 0;
+            const bonusPct = (parseFloat(document.getElementById('bonusPct').value) || 0) / 100;
+            const signOn = parseFloat(document.getElementById('signOn').value) || 0;
+            const equity = parseFloat(document.getElementById('equity').value) || 0;
+            const benefits = parseFloat(document.getElementById('benefits').value) || 0;
+
+            const annualBonus = base * bonusPct;
+            const annualEquity = equity / 4; // Standard 4-year vest
+
+            // Year 1 includes Sign-on
+            const year1 = base + annualBonus + signOn + annualEquity + benefits;
+            // Years 2-4 exclude Sign-on
+            const standardYear = base + annualBonus + annualEquity + benefits;
+            const fourYearTotal = year1 + (standardYear * 3);
+            const avg = fourYearTotal / 4;
+
+            // Update UI
+            document.getElementById('y1TCC').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(year1);
+            document.getElementById('monthly').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(year1 / 12);
+            document.getElementById('avgTCC').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(avg);
+
+            let projectionHTML = `
+                <div class="flex justify-between"><span>Year 1:</span> <span>${formatCurr(year1)}</span></div>
+                <div class="flex justify-between"><span>Year 2:</span> <span>${formatCurr(standardYear)}</span></div>
+                <div class="flex justify-between"><span>Year 3:</span> <span>${formatCurr(standardYear)}</span></div>
+                <div class="flex justify-between"><span>Year 4:</span> <span>${formatCurr(standardYear)}</span></div>
+                <div class="flex justify-between font-bold border-t border-indigo-700 pt-1 mt-1"><span>Total 4-Year Value:</span> <span>${formatCurr(fourYearTotal)}</span></div>
+            `;
+            document.getElementById('projectionList').innerHTML = projectionHTML;
+        }
+
+        function formatCurr(num) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+        }
+
+        // Add event listeners to all inputs
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', calculate);
+        });
+
+        // Run once on load
+        calculate();
+    </script>
+</body>
+</html>
