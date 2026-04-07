@@ -3,152 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Physician Offer Modeler</title>
-    <!-- Tailwind CSS for styling -->
+    <title>Advanced MD Compensation & ROI Modeler</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        .input-group { border-left: 4px solid #e2e8f0; padding-left: 1rem; margin-bottom: 1.5rem; }
+        .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; rounded: 0.5rem; }
         @media print { .no-print { display: none !important; } }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen">
+<body class="bg-gray-100 text-slate-900 font-sans leading-tight">
 
-    <!-- NAVIGATION / YOUR BRANDING -->
-    <nav class="bg-white border-b border-slate-200 p-4 mb-6 no-print">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <!-- REPLACE THE URL BELOW WITH YOUR LOGO URL -->
-                <img src="Content/vog-logo.png" alt="Logo" class="h-8">
-                <span class="font-bold text-slate-700 border-l pl-4 border-slate-200">Physician Comp Pro</span>
+    <!-- TOP NAV -->
+    <nav class="bg-white border-b border-slate-200 py-4 px-6 no-print">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-xl">Σ</div>
+                <h1 class="text-xl font-bold tracking-tight">Physician Value <span class="text-indigo-600">Modeler</span></h1>
             </div>
-            <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold text-sm transition">
-                Download PDF Report
-            </button>
+            <div class="flex gap-4">
+                <select id="viewMode" class="bg-slate-100 border-none rounded-md text-sm font-semibold p-2 focus:ring-2 focus:ring-indigo-500" onchange="runModel()">
+                    <option value="physician">View: Physician Perspective</option>
+                    <option value="employer">View: Employer/System Perspective</option>
+                </select>
+                <button onclick="window.print()" class="bg-slate-900 text-white px-4 py-2 rounded text-sm font-bold">Export Report</button>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-4">
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- HEADER SECTION: HOSPITAL BRANDING -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-6">
-            <div class="flex flex-col md:flex-row items-center gap-8">
-                <!-- User Upload for Hospital Logo -->
-                <div class="flex-shrink-0 text-center">
-                    <div id="logoPreview" class="w-32 h-32 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden">
-                        <span class="text-slate-400 text-[10px] uppercase font-bold p-2">Hospital Logo</span>
+        <!-- LEFT: INPUT PANELS -->
+        <div class="lg:col-span-8 space-y-6">
+            
+            <!-- 1. Specialty & Benchmarking -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-indigo-500">📊</span> Benchmarking & Specialty</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Specialty Preset (Illustrative)</label>
+                        <select id="specialty" class="w-full mt-1 p-2 bg-slate-50 border rounded-md" onchange="applyPreset()">
+                            <option value="fm">Family Medicine</option>
+                            <option value="im">Internal Medicine</option>
+                            <option value="cards">Cardiology (Invasive)</option>
+                            <option value="ortho">Orthopedic Surgery</option>
+                            <option value="hospitalist">Hospitalist</option>
+                            <option value="custom">Custom (Manual Entry)</option>
+                        </select>
                     </div>
-                    <input type="file" id="userLogoInput" class="no-print mt-2 text-xs w-32" accept="image/*">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase italic">Benchmarking Source (SullivanCotter/MGMA)</label>
+                        <input type="text" placeholder="e.g. 2024 MGMA National Median" class="w-full mt-1 p-2 bg-slate-50 border rounded-md text-sm">
+                    </div>
                 </div>
+            </div>
 
-                <!-- Text Headings -->
-                <div class="flex-grow w-full space-y-2">
-                    <input type="text" id="hospitalName" placeholder="Health System Name (Click to Edit)" class="w-full text-3xl font-black text-slate-800 border-none focus:ring-2 focus:ring-indigo-500 rounded px-2 bg-transparent">
-                    <input type="text" id="candidateName" placeholder="Physician Name, MD/DO" class="w-full text-xl text-indigo-600 font-semibold border-none focus:ring-2 focus:ring-indigo-500 rounded px-2 bg-transparent">
+            <!-- 2. Clinical Production -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-indigo-500">📈</span> Productivity & Revenue</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="input-group border-indigo-400">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Annual wRVUs</label>
+                        <input type="number" id="wrvus" value="5200" class="w-full text-lg font-bold outline-none" oninput="runModel()">
+                    </div>
+                    <div class="input-group border-indigo-200">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">FTE Status</label>
+                        <input type="number" id="fte" value="1.0" step="0.1" class="w-full text-lg font-bold outline-none" oninput="runModel()">
+                    </div>
+                    <div class="input-group border-emerald-400">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Avg Collections per wRVU</label>
+                        <input type="number" id="collectionsPerWrvu" value="85" class="w-full text-lg font-bold outline-none" oninput="runModel()">
+                        <p class="text-[10px] text-slate-400 italic">Common range: $60 - $110</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Compensation Structure -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-indigo-500">💰</span> Compensation Split</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Guaranteed Base Salary</label>
+                            <input type="number" id="baseSalary" value="240000" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase">wRVU Threshold</label>
+                                <input type="number" id="threshold" value="4200" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase">$/wRVU Conv.</label>
+                                <input type="number" id="conversion" value="45" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Sign-On / Retension (Yr 1)</label>
+                            <input type="number" id="signOn" value="30000" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Annual Benefits & CME (Cost to Emp)</label>
+                            <input type="number" id="benefits" value="65000" class="w-full p-2 bg-slate-50 border rounded" oninput="runModel()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Employer Overhead (Advanced) -->
+            <div id="employerSection" class="bg-slate-800 p-6 rounded-xl shadow-sm text-white">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-300">🏢 Corporate Allocated Overhead</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase">Fixed Overhead % (Staff/Rent)</label>
+                        <input type="number" id="overheadPct" value="35" class="w-full bg-slate-700 border-none rounded p-2 text-white" oninput="runModel()">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase">Malpractice Cost (Annual)</label>
+                        <input type="number" id="malpractice" value="15000" class="w-full bg-slate-700 border-none rounded p-2 text-white" oninput="runModel()">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase">Indirect/Apportioned Costs</label>
+                        <input type="number" id="indirect" value="10000" class="w-full bg-slate-700 border-none rounded p-2 text-white" oninput="runModel()">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- LEFT COLUMN: INPUTS -->
-            <div class="lg:col-span-2 space-y-6">
+        <!-- RIGHT: ANALYSIS PANEL -->
+        <div class="lg:col-span-4">
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden sticky top-6">
+                <div class="bg-indigo-600 p-6 text-white text-center">
+                    <h2 class="text-sm font-bold uppercase tracking-widest opacity-80" id="resultLabel">Physician Year 1 TCC</h2>
+                    <p class="text-5xl font-black mt-2" id="outMainMetric">$0</p>
+                </div>
                 
-                <!-- Section 1: Effort -->
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Clinical Commitment</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">FTE Status</label>
-                            <input type="number" id="fte" value="1.0" step="0.1" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
+                <div class="p-6 space-y-6">
+                    <!-- Value Surplus Metric -->
+                    <div class="metric-card">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Estimated Surplus Value</p>
+                        <div class="flex justify-between items-end mt-1">
+                            <p class="text-2xl font-bold text-slate-800" id="outSurplus">$0</p>
+                            <p class="text-xs font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-700" id="outROI">0% ROI</p>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Clinical Hrs / Wk</label>
-                            <input type="number" id="hoursPerWeek" value="40" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Weeks / Year</label>
-                            <input type="number" id="weeksPerYear" value="48" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 2: Cash -->
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Cash Compensation</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Annual Base Salary ($)</label>
-                            <input type="number" id="baseSalary" value="250000" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Sign-on Bonus ($)</label>
-                            <input type="number" id="signOn" value="25000" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 3: Production -->
-                <div class="bg-indigo-900 p-6 rounded-xl shadow-lg text-white">
-                    <h3 class="text-sm font-bold text-indigo-300 uppercase tracking-widest mb-4">wRVU Production Model</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold mb-1 uppercase">Est. Annual wRVUs</label>
-                            <input type="number" id="actualWRVUs" value="6500" class="w-full p-2 bg-indigo-800 border border-indigo-700 rounded text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold mb-1 uppercase">wRVU Threshold</label>
-                            <input type="number" id="threshold" value="4800" class="w-full p-2 bg-indigo-800 border border-indigo-700 rounded text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold mb-1 uppercase">$/wRVU Conversion</label>
-                            <input type="number" id="conversion" value="50" class="w-full p-2 bg-indigo-800 border border-indigo-700 rounded text-white">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 4: Benefits -->
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Benefits & Perks</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Annual CME/Dues ($)</label>
-                            <input type="number" id="cme" value="5000" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Retirement Match ($)</label>
-                            <input type="number" id="retirement" value="10000" class="w-full p-2 bg-slate-50 border border-slate-200 rounded">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: RESULTS -->
-            <div class="lg:col-span-1">
-                <div class="bg-white p-8 rounded-xl shadow-md border-t-4 border-indigo-600 sticky top-6">
-                    <div class="mb-8">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Year 1 Total Cash (TCC)</p>
-                        <h2 class="text-5xl font-black text-slate-900" id="displayTCC">$0</h2>
-                    </div>
-
-                    <div class="space-y-4 border-t border-slate-100 pt-6">
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 italic">Effective Hourly Rate:</span>
-                            <span class="font-bold text-emerald-600" id="displayHourly">$0/hr</span>
-                        </div>
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 italic">Production Component:</span>
-                            <span class="font-bold text-slate-800" id="displayProd">$0</span>
-                        </div>
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 italic">Guaranteed Base:</span>
-                            <span class="font-bold text-slate-800" id="displayBase">$0</span>
+                        <div class="w-full bg-slate-200 h-2 mt-3 rounded-full overflow-hidden">
+                            <div id="roiBar" class="bg-emerald-500 h-full w-[50%]"></div>
                         </div>
                     </div>
 
-                    <div class="mt-8 bg-slate-50 p-4 rounded-lg">
-                        <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-3">4-Year Potential Accumulation</h4>
-                        <div id="projectionList" class="space-y-2 text-sm">
-                            <!-- JS will populate -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Total Net Collections:</span>
+                            <span class="font-bold" id="outCollections">$0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Total Cost of Employment:</span>
+                            <span class="font-bold text-rose-500" id="outTCE">$0</span>
+                        </div>
+                        <hr>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 font-bold">Comp-to-Collections Ratio:</span>
+                            <span class="font-black text-indigo-600" id="outRatio">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-lg border border-dashed border-slate-300">
+                        <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-2 italic">Benchmarking Comparison (TCC)</h4>
+                        <div id="benchList" class="space-y-1 text-xs">
+                            <!-- Populated by JS -->
                         </div>
                     </div>
                 </div>
@@ -157,71 +179,110 @@
     </main>
 
     <script>
-        // List of all inputs we need to watch
-        const fields = ['fte', 'hoursPerWeek', 'weeksPerYear', 'baseSalary', 'signOn', 'actualWRVUs', 'threshold', 'conversion', 'cme', 'retirement'];
+        const presets = {
+            fm: { base: 240000, wrvus: 5200, thresh: 4200, conv: 45, coll: 85, bench: 265000 },
+            im: { base: 260000, wrvus: 5500, thresh: 4500, conv: 48, coll: 90, bench: 280000 },
+            cards: { base: 450000, wrvus: 8500, thresh: 6000, conv: 65, coll: 110, bench: 550000 },
+            ortho: { base: 550000, wrvus: 9000, thresh: 7000, conv: 75, coll: 125, bench: 680000 },
+            hospitalist: { base: 280000, wrvus: 4000, thresh: 3500, conv: 40, coll: 80, bench: 310000 }
+        };
 
-        function runCalculator() {
-            // 1. Get Values
-            const data = {};
-            fields.forEach(f => {
-                data[f] = parseFloat(document.getElementById(f).value) || 0;
-            });
+        function applyPreset() {
+            const key = document.getElementById('specialty').value;
+            if (key === 'custom') return;
+            const p = presets[key];
+            document.getElementById('baseSalary').value = p.base;
+            document.getElementById('wrvus').value = p.wrvus;
+            document.getElementById('threshold').value = p.thresh;
+            document.getElementById('conversion').value = p.conv;
+            document.getElementById('collectionsPerWrvu').value = p.coll;
+            runModel();
+        }
 
-            // 2. Calculations
-            const productionPay = Math.max(0, (data.actualWRVUs - data.threshold) * data.conversion);
-            const standardYearly = data.baseSalary + productionPay + data.cme + data.retirement;
-            const year1Total = standardYearly + data.signOn;
+        function runModel() {
+            const view = document.getElementById('viewMode').value;
+            const data = {
+                wrvus: parseFloat(document.getElementById('wrvus').value) || 0,
+                base: parseFloat(document.getElementById('baseSalary').value) || 0,
+                signOn: parseFloat(document.getElementById('signOn').value) || 0,
+                thresh: parseFloat(document.getElementById('threshold').value) || 0,
+                conv: parseFloat(document.getElementById('conversion').value) || 0,
+                collFactor: parseFloat(document.getElementById('collectionsPerWrvu').value) || 0,
+                overheadPct: parseFloat(document.getElementById('overheadPct').value) || 0,
+                benefits: parseFloat(document.getElementById('benefits').value) || 0,
+                mal: parseFloat(document.getElementById('malpractice').value) || 0,
+                ind: parseFloat(document.getElementById('indirect').value) || 0
+            };
 
-            const totalHours = data.hoursPerWeek * data.weeksPerYear;
-            const hourlyRate = totalHours > 0 ? (year1Total / totalHours) : 0;
+            // 1. COMP CALC
+            const production = Math.max(0, (data.wrvus - data.thresh) * data.conv);
+            const tcc_yr1 = data.base + production + data.signOn;
+            const tcc_recurring = data.base + production;
 
-            // 3. Update Displays
-            document.getElementById('displayTCC').innerText = fmt(year1Total);
-            document.getElementById('displayHourly').innerText = fmt(hourlyRate) + '/hr';
-            document.getElementById('displayProd').innerText = fmt(productionPay);
-            document.getElementById('displayBase').innerText = fmt(data.baseSalary);
+            // 2. REVENUE & SURPLUS
+            const grossCollections = data.wrvus * data.collFactor;
+            const tce = tcc_recurring + data.benefits + data.mal + data.ind;
+            const totalOverheadDollars = grossCollections * (data.overheadPct / 100);
+            const totalSystemCost = tce + totalOverheadDollars;
+            const surplus = grossCollections - totalSystemCost;
+            const roi = (surplus / totalSystemCost) * 100;
 
-            // 4. Cumulative Table
-            let tableHtml = '';
-            for(let i=1; i<=4; i++) {
-                let cumulative = year1Total + (standardYearly * (i-1));
-                tableHtml += `
-                    <div class="flex justify-between items-center font-mono">
-                        <span class="text-slate-500">Year ${i}:</span>
-                        <span class="font-bold text-slate-800">${fmt(cumulative)}</span>
+            // 3. UI UPDATES
+            if (view === 'physician') {
+                document.getElementById('resultLabel').innerText = "Physician Year 1 TCC";
+                document.getElementById('outMainMetric').innerText = fmt(tcc_yr1);
+                document.getElementById('employerSection').classList.add('opacity-40');
+            } else {
+                document.getElementById('resultLabel').innerText = "Net Employer Surplus (Recur.)";
+                document.getElementById('outMainMetric').innerText = fmt(surplus);
+                document.getElementById('employerSection').classList.remove('opacity-40');
+            }
+
+            document.getElementById('outCollections').innerText = fmt(grossCollections);
+            document.getElementById('outTCE').innerText = fmt(totalSystemCost);
+            document.getElementById('outSurplus').innerText = fmt(surplus);
+            document.getElementById('outRatio').innerText = ((tcc_recurring / grossCollections) * 100).toFixed(1) + "%";
+            document.getElementById('outROI').innerText = roi.toFixed(1) + "% ROI";
+            
+            // ROI Bar styling
+            const roiClamped = Math.min(Math.max(roi, 0), 100);
+            document.getElementById('roiBar').style.width = roiClamped + "%";
+            document.getElementById('roiBar').className = roi < 0 ? 'bg-rose-500 h-full transition-all' : 'bg-emerald-500 h-full transition-all';
+
+            updateBenchmarking(tcc_recurring);
+        }
+
+        function updateBenchmarking(currentTCC) {
+            const benchMedian = presets[document.getElementById('specialty').value]?.bench || currentTCC * 1.1;
+            const benchmarks = [
+                { label: "25th Percentile", val: benchMedian * 0.85 },
+                { label: "50th (Median)", val: benchMedian },
+                { label: "75th Percentile", val: benchMedian * 1.2 },
+                { label: "90th Percentile", val: benchMedian * 1.4 }
+            ];
+
+            let html = '';
+            benchmarks.forEach(b => {
+                const diff = currentTCC - b.val;
+                const color = diff >= 0 ? 'text-emerald-600' : 'text-rose-600';
+                html += `
+                    <div class="flex justify-between">
+                        <span>${b.label}:</span>
+                        <div class="text-right font-mono">
+                            <div>${fmt(b.val)}</div>
+                            <div class="${color} font-bold" style="font-size: 9px;">${diff >= 0 ? '+' : ''}${fmt(diff)}</div>
+                        </div>
                     </div>`;
-            }
-            document.getElementById('projectionList').innerHTML = tableHtml;
+            });
+            document.getElementById('benchList').innerHTML = html;
         }
 
-        // Helper: Format to USD
-        function fmt(num) {
-            return new Intl.NumberFormat('en-US', { 
-                style: 'currency', 
-                currency: 'USD', 
-                maximumFractionDigits: 0 
-            }).format(num);
+        function fmt(n) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
         }
 
-        // Handle User Logo Upload
-        document.getElementById('userLogoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('logoPreview').innerHTML = `<img src="${event.target.result}" class="w-full h-full object-contain p-1">`;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Add Listeners to every input field
-        fields.forEach(id => {
-            document.getElementById(id).addEventListener('input', runCalculator);
-        });
-
-        // Run once on startup
-        runCalculator();
+        // Initial Run
+        applyPreset();
     </script>
 </body>
 </html>
