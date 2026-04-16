@@ -1,6 +1,4 @@
 # MD Value Check
-Web Browser Version: 
-> https://lprkc.github.io/MD-VALUECHECK/
 > A compensation analysis tool that helps physicians evaluate whether their employment offers are equitable and aligned with market benchmarks.
 
 ## 📋 Overview
@@ -18,6 +16,9 @@ MD Value Check transforms opaque physician compensation packages into clear, dat
 - **📄 PDF Report Generation** — Export a professional summary to share with advisors, attorneys, or use during contract negotiations.
 
 ## 🚀 Getting Started
+Web Browser Version:
+
+https://lprkc.github.io/MD-VALUECHECK/
 
 ### Prerequisites
 
